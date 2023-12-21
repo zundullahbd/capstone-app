@@ -5,8 +5,27 @@ class SignUpSchema(BaseModel):
     email: str
     password: str
     
+    class Config:
+        schema_extra = {
+            "example": {
+                "email": "sample@gmail.com",
+                "password": "samplepassword12345"
+            }
+        }
+    
 class LoginSchema(BaseModel):
     email: str
     password: str
     
+    class Config:
+        schema_extra = {
+            "example": {
+                "email": "sample@gmail.com",
+                "password": "samplepassword12345"
+            }
+        }
+
+class jobData(BaseModel):
+    text_list: str
+
     
