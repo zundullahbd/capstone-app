@@ -1,3 +1,5 @@
+from typing import Optional
+
 import firebase_admin
 import pyrebase
 import uvicorn
@@ -8,21 +10,17 @@ from firebase_admin import auth, credentials
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
-from keras.models import load_model
-from model.model import SignUpSchema, LoginSchema
-import firebase_admin
-from firebase_admin import credentials, auth
-import pyrebase
 from pydantic import BaseModel
 
-# Load your model
+from app.model.model import LoginSchema, SignUpSchema, jobData
+
 f = "app/model/model_capstone.h5"
 model = load_model(f)
 
 
-# Define a Pydantic model for the input data
 class InputData(BaseModel):
     text_list: str
+
 
 app = FastAPI(
     description="This is the main app for the capstone project.",
@@ -31,32 +29,50 @@ app = FastAPI(
 )
 
 
+# Firebase configuration
 firebaseConfig = {
-    "apiKey": "AIzaSyCYRgpEpLVcVvhGKl0O8gSr9syNIFJipN8",
-    "authDomain": "capstone-ch2-ps127.firebaseapp.com",
-    "projectId": "capstone-ch2-ps127",
-    "storageBucket": "capstone-ch2-ps127.appspot.com",
-    "messagingSenderId": "219059724934",
-    "appId": "1:219059724934:web:5c3194bce427741d326707",
-    "measurementId": "G-VJLZQWLXJL",
+    "apiKey": "",
+    "authDomain": "",
+    "projectId": "",
+    "storageBucket": "",
+    "messagingSenderId": "",
+    "appId": "",
+    "measurementId": "",
     "databaseURL": "",
 }
 
+# Initialize Firebase
 if not firebase_admin._apps:
+    # Load the Firebase credentials from a JSON file
     cred = credentials.Certificate("app/capstone-key.json")
+    # Initialize the Firebase application with the loaded credentials
     firebase_admin.initialize_app(cred)
 
+# Initialize Pyrebase with the Firebase configuration
 firebase = pyrebase.initialize_app(firebaseConfig)
 
 
 @app.post("/signup")
 async def signup(data: SignUpSchema):
+    """
+    Sign up a new user.
+
+    This endpoint accepts an email and password and creates a new user in Firebase.
+
+    Args:
+        data (SignUpSchema): The email and password of the new user.
+
+    Returns:
+        JSONResponse: A response with a status code and a message indicating whether the user was created successfully.
+    """
     email = data.email
     password = data.password
     try:
+        # Create a new user in Firebase
         user = auth.create_user(
             email=email, email_verified=False, password=password, disabled=False
         )
+        # Return a success response
         return JSONResponse(
             status_code=200,
             content={
@@ -65,11 +81,23 @@ async def signup(data: SignUpSchema):
             },
         )
     except Exception as e:
+        # Return an error response if there was an exception
         return HTTPException(status_code=400, detail=f"Error creating user: {e}")
 
 
 @app.post("/login")
 async def login(data: LoginSchema):
+    """
+    Log in a user.
+
+    This endpoint accepts an email and password and logs in the user in Firebase.
+
+    Args:
+        data (LoginSchema): The email and password of the user.
+
+    Returns:
+        JSONResponse: A response with a status code, a success indicator, a message indicating whether the user was logged in successfully, and the user's token.
+    """
     email = data.email
     password = data.password
     try:
@@ -91,6 +119,17 @@ async def login(data: LoginSchema):
 
 @app.post("/validate")
 async def validate_token(request: Request):
+    """
+    Validate a user's token.
+
+    This endpoint accepts a request with an Authorization header and validates the user's token.
+
+    Args:
+        request (Request): The request with the Authorization header.
+
+    Returns:
+        None. This function will raise an HTTPException if the token is invalid.
+    """
     headers = request.headers
     jwt_token = headers.get("Authorization")
 
@@ -106,21 +145,32 @@ async def main():
 
 @app.post("/predict")
 async def predict(data: InputData):
-    # Extract the text from the input data
-    text = data.text_list
+    """
+    Make a prediction based on the input data.
 
-    # Tokenize the input string
+    This endpoint accepts either a single text list or several fields that are concatenated into a single text list. The text list is then tokenized, padded, and used to make a prediction.
+
+    Args:
+        data (InputData): The input data.
+
+    Returns:
+        dict: A dictionary with a "prediction" key and the prediction as the value.
+    """
+    if data.text_list is not None:
+        text = data.text_list
+    else:
+        text = " ".join(
+            [str(value) for key, value in data.dict().items() if value is not None]
+        )
+
     tokenizer = Tokenizer(num_words=10000)
     tokenizer.fit_on_texts([text])
     sequences = tokenizer.texts_to_sequences([text])
 
-    # Pad the sequences to the maximum length
     padded_sequences = pad_sequences(sequences, maxlen=1426, padding="post")
 
-    # Now you can pass padded_sequences to your model
     prediction = model.predict(padded_sequences)
 
-    # Return the prediction
     return {"prediction": prediction.tolist()}
 
 
