@@ -9,7 +9,7 @@ from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from keras.models import load_model
-from model.model import jobData, SignUpSchema, LoginSchema
+from model.model import SignUpSchema, LoginSchema
 import firebase_admin
 from firebase_admin import credentials, auth
 import pyrebase
