@@ -8,15 +8,11 @@ from firebase_admin import auth, credentials
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
-<<<<<<< HEAD:main.py
 from keras.models import load_model
 from model.model import jobData, SignUpSchema, LoginSchema
 import firebase_admin
 from firebase_admin import credentials, auth
 import pyrebase
-=======
-from app.model.model import LoginSchema, SignUpSchema, jobData
->>>>>>> 0dc3864800904e91ff287edfc6309a634b56da50:app/main.py
 from pydantic import BaseModel
 
 # Load your model
@@ -28,10 +24,6 @@ model = load_model(f)
 class InputData(BaseModel):
     text_list: str
 
-<<<<<<< HEAD:main.py
-=======
-
->>>>>>> 0dc3864800904e91ff287edfc6309a634b56da50:app/main.py
 app = FastAPI(
     description="This is the main app for the capstone project.",
     title="Capstone App",

@@ -19,7 +19,3 @@ class LoginSchema(BaseModel):
         schema_extra = {
             "example": {"email": "sample@gmail.com", "password": "samplepassword12345"}
         }
-
-
-class jobData(BaseModel):
-    text_list: str
