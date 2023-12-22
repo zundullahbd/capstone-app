@@ -9,11 +9,16 @@ from model.model import jobData, SignUpSchema, LoginSchema
 import firebase_admin
 from firebase_admin import credentials, auth
 import pyrebase
+from pydantic import BaseModel
 
 # Load your model
 f = "model/model_capstone.h5"
 model = load_model(f)
 
+
+# Define a Pydantic model for the input data
+class InputData(BaseModel):
+    text_list: str
 
 app = FastAPI(
     description="This is the main app for the capstone project.",
@@ -84,8 +89,8 @@ async def main():
     return {"message": "Hello World"}
 
 
-@app.post("/job/predict")
-async def predict(data: jobData):
+@app.post("/predict")
+async def predict(data: InputData):
     # Extract the text from the input data
     text = data.text_list
     
@@ -106,7 +111,7 @@ async def predict(data: jobData):
     is_fraud = prediction[0][0] > threshold
     
     # Return the prediction
-    return {"prediction": 'fraud' if is_fraud else 'real', "probability": prediction.tolist()}
+    return {"prediction": prediction.tolist()}
 
 
 if __name__ == "__main__":
